@@ -1,4 +1,4 @@
-#include <stdio.h>
+
 #include "server.h"
 
 int serverfd;
@@ -33,9 +33,56 @@ void checkForNewClients() {
 }
 
 void attendClient(int clientfd) {
-    char buffer[BUFFSIZE] = {0};
+
+    char buffer[BUFFERSIZE] = {0};
+    char * databaseInfo;
+    char * invalid = "invalid number";
+    char * flightData;
+    int flightNumber;
+
+
     while(1) {
-        read(clientfd,buffer,BUFFSIZE);
-        printf("%s\n",buffer);
+        printf("Atendiendo\n");
+        read(clientfd,buffer,BUFFERSIZE);
+        flightNumber = checkFlightNumber(buffer);
+        if(flightNumber == 0) {
+            write(clientfd,invalid,BUFFERSIZE);
+        } else {
+            flightData = getFlightData(flightNumber);
+            write(clientfd,flightData,BUFFERSIZE);
+        }
+
     }
 }
+
+int checkFlightNumber(char * buffer) {
+
+    int flightNumber;
+
+    char * numPointer = buffer + strlen(buffer) - 1;
+    while (isdigit((char)*(numPointer - 1))) {
+        numPointer--;
+    }
+
+    flightNumber = atoi(numPointer);
+    if(flightNumberIsValid(flightNumber)) {
+        return flightNumber;
+    }
+
+    return 0;
+
+}
+
+int flightNumberIsValid(int number) {
+    /*TODO*/
+    return TRUE;
+}
+
+char * getFlightData(int flightNumber) {
+    /*TODO*/
+
+}
+
+
+
+

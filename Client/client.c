@@ -1,9 +1,7 @@
-
-#include <stdlib.h>
-#include <ctype.h>
 #include "client.h"
 
 int openSocket() {
+
     int socketfd;
     struct sockaddr_in servaddr;
 
@@ -27,14 +25,44 @@ int openSocket() {
     return socketfd;
 }
 
+void startDialogue(char * buff, int socketfd) {
+
+    char * parsedEntry;
+    char * socketReception = malloc(sizeof(char)*BUFFERSIZE);
+    char * answerFromClient;
+
+    parsedEntry = parseUserEntry(buff);
+    if(parsedEntry != NULL) {
+        printf("Writing: %s\n", parsedEntry);
+        write(socketfd,parsedEntry,100);
+        printf("After Writing\n");
+        read(socketfd,socketReception,BUFFERSIZE);
+        printf("After Writing\n");
+
+        displayServerResponse(parsedEntry,socketReception);
+        if(secondEntryRequired(parsedEntry)) {
+            answerFromClient = getSecondEntry();
+            if(answerFromClient != NULL) {
+                write(socketfd,answerFromClient, BUFFERSIZE);
+                read(socketfd,socketReception,BUFFERSIZE);
+                printf("%s\n", socketReception);
+            }
+        }
+    }
+}
+
 char * parseUserEntry(char * entry) {
 
-    if(strcmp(entry,"check flight status") == 0 || strcmp(entry, "book flight") == 0
+    if(strcmp(entry,"check flight status") == 0 || strcmp(entry, "book flight\0") == 0
        || strcmp(entry,"cancel booking") == 0 || strcmp(entry,"cancel flight") == 0 ) {
+
         return parseFlightNumber(entry);
     } else if( strcmp(entry,"new flight") == 0) {
+        printf("Returning entry\n");
         return entry;
     }
+
+    return NULL;
 }
 
 
@@ -45,7 +73,7 @@ char * parseFlightNumber(char * entry) {
     printf("Enter flight number:\n");
     if((param = readInputUntil('\n')) != NULL) {
         if(isNumericValue(param)) {
-            return strcat(entry, param);
+            return strcat(strcat(entry, " "),param);
         } else {
             printf("Invalid flight number\n");
         }
@@ -55,6 +83,7 @@ char * parseFlightNumber(char * entry) {
 }
 
 void displayServerResponse(char * firstEntry, char * serverResponse) {
+
     if(strcmp(firstEntry,"check flight status") == 0
        || strcmp(firstEntry, "book flight") == 0
        || strcmp(firstEntry,"cancel booking") == 0) {
@@ -73,7 +102,9 @@ void displayServerResponse(char * firstEntry, char * serverResponse) {
 }
 
 char * getSecondEntry() {
+
     char * ret;
+
     ret = readInputUntil('\n');
     if(isValidSeat(ret)) {
         return ret;
@@ -83,6 +114,7 @@ char * getSecondEntry() {
 }
 
 char * readInputUntil(char limit) {
+
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
     int c;
     int i = 0;
@@ -96,10 +128,12 @@ char * readInputUntil(char limit) {
         return NULL;
     }
 
+    ret[i] = 0;
     return ret;
 }
 
 int isNumericValue(const char * str) {
+
     int i = 0;
     while(str[i] != 0) {
         if(!isdigit(str[i++])) {
@@ -110,6 +144,7 @@ int isNumericValue(const char * str) {
 }
 
 int isValidSeat(const char * str) {
+
     int i = 0;
 
     if(((str[i] >= 'A' && str[i] <= 'G') || (str[i] >= 'a' && str[i] <= 'g'))
@@ -123,6 +158,7 @@ int isValidSeat(const char * str) {
 }
 
 int secondEntryRequired(char * firstEntry) {
+
     if(strcmp(firstEntry, "book flight") == 0 || strcmp(firstEntry,"cancel booking") == 0) {
         return TRUE;
     }

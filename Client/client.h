@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -10,6 +12,7 @@
 #define FALSE 0
 
 int openSocket();
+void startDialogue(char * buff, int socketfd);
 char * parseUserEntry(char * entry);
 char * parseFlightNumber(char * entry);
 void displayServerResponse(char * originalEntry, char * serverResponse);

@@ -2,9 +2,18 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <sys/types.h>
-#define BUFFSIZE 128
+#define BUFFERSIZE 128
+#define TRUE 1
+#define FALSE 0
 
 int handleSockets();
 void checkForNewClients();
 void attendClient(int clientfd);
+int checkFlightNumber(char * buffer);
+int flightNumberIsValid(int number);
+char * getFlightData(int flightNumber);
+
