@@ -3,10 +3,18 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include "flight.h"
 
-int openSocket(); /*Abre un socket y lo conecta al server*/
-void checkFlightStatus();
-void bookFlight();
-void cancelBooking();
-void newFlight();
-void deleteFlight();
+#define BUFFERSIZE 128
+#define TRUE 1
+#define FALSE 0
+
+int openSocket();
+char * parseUserEntry(char * entry);
+char * parseFlightNumber(char * entry);
+void displayServerResponse(char * originalEntry, char * serverResponse);
+int secondEntryRequired(char * firstEntry);
+char * getSecondEntry();
+char * readInputUntil(char limit);
+int isNumericValue(const char * str);
+int isValidSeat(const char * str);
