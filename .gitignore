@@ -7,6 +7,8 @@
 
 *.txt
 
+*.o
+
 cmake-build-debug/CMakeFiles/3\.9\.6/
 
 cmake-build-debug/CMakeFiles/
@@ -14,3 +16,5 @@ cmake-build-debug/CMakeFiles/
 cmake-build-debug/
 
 Client/client
+
+Server/server
