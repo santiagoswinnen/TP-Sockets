@@ -33,29 +33,35 @@ void startDialogue(char * buff, int socketfd) {
 
     parsedEntry = parseUserEntry(buff);
     if(parsedEntry != NULL) {
-        printf("Writing: %s\n", parsedEntry);
         write(socketfd,parsedEntry,100);
-        printf("After Writing\n");
         read(socketfd,socketReception,BUFFERSIZE);
-        printf("After Writing\n");
-
-        displayServerResponse(parsedEntry,socketReception);
-        if(secondEntryRequired(parsedEntry)) {
-            answerFromClient = getSecondEntry();
-            if(answerFromClient != NULL) {
-                write(socketfd,answerFromClient, BUFFERSIZE);
-                read(socketfd,socketReception,BUFFERSIZE);
-                printf("%s\n", socketReception);
+        if(strcmp(socketReception,"invalid number") == 0) {
+            printf("%s\n", socketReception);
+        } else {
+            displayServerResponse(parsedEntry,socketReception);
+            if(secondEntryRequired(parsedEntry)) {
+                answerFromClient = getSecondEntry();
+                if(answerFromClient != NULL) {
+                    write(socketfd,answerFromClient, BUFFERSIZE);
+                    read(socketfd,socketReception,BUFFERSIZE);
+                    printf("%s\n", socketReception);
+                    clearBuffer(answerFromClient);
+                }
             }
         }
+        clearBuffer(parsedEntry);
+    } else {
+        printf("Invalid action\n");
     }
+
+    clearBuffer(socketReception);
+    free(socketReception);
 }
 
 char * parseUserEntry(char * entry) {
 
     if(strcmp(entry,"check flight status") == 0 || strcmp(entry, "book flight\0") == 0
        || strcmp(entry,"cancel booking") == 0 || strcmp(entry,"cancel flight") == 0 ) {
-
         return parseFlightNumber(entry);
     } else if( strcmp(entry,"new flight") == 0) {
         printf("Returning entry\n");
@@ -84,12 +90,17 @@ char * parseFlightNumber(char * entry) {
 
 void displayServerResponse(char * firstEntry, char * serverResponse) {
 
+    printf("LLEGUE\n");
+    printf("Entry: %s\n",serverResponse);
+
     if(strcmp(firstEntry,"check flight status") == 0
        || strcmp(firstEntry, "book flight") == 0
        || strcmp(firstEntry,"cancel booking") == 0) {
 
         Flight flight = flightFromString(serverResponse);
         showFlight(flight);
+
+
 
         if(strcmp(firstEntry,"book flight") == 0) {
             printf("Select your seat please (e.g. B23)\n");
@@ -164,5 +175,14 @@ int secondEntryRequired(char * firstEntry) {
     }
 
     return FALSE;
+}
+
+void clearBuffer(char * buffer) {
+
+    int i;
+
+    for(i = 0; i < BUFFERSIZE; i++) {
+        buffer[i] = 0;
+    }
 }
 

@@ -16,9 +16,11 @@ int main() {
         c = getchar();
         if(c == '\n') {
             startDialogue(buff, socketfd);
+            clearBuffer(buff);
         } else {
             buff[i++] = (char)c;
             buff[i] = 0;
         }
+
     }
 }

@@ -7,7 +7,7 @@
 #include <string.h>
 #include "flight.h"
 
-#define BUFFERSIZE 128
+#define BUFFERSIZE 64
 #define TRUE 1
 #define FALSE 0
 
@@ -21,3 +21,4 @@ char * getSecondEntry();
 char * readInputUntil(char limit);
 int isNumericValue(const char * str);
 int isValidSeat(const char * str);
+void clearBuffer(char * buffer);
