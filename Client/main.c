@@ -12,11 +12,19 @@ int main() {
         return -1;
     }
 
+    printf("Welcome! Available actions: "
+                   "\n\t-> book flight "
+                   "\n\t-> cancel booking"
+                   "\n\t-> check flight status"
+                   "\n\t-> new flight"
+                   "\n\t-> cancel flight\n>");
+
     while(1) {
         c = getchar();
         if(c == '\n') {
             startDialogue(buff, socketfd);
             clearBuffer(buff);
+            i = 0;
         } else {
             buff[i++] = (char)c;
             buff[i] = 0;

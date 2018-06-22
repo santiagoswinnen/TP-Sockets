@@ -30,41 +30,48 @@ void startDialogue(char * buff, int socketfd) {
     char * parsedEntry;
     char * socketReception = malloc(sizeof(char)*BUFFERSIZE);
     char * answerFromClient;
+    ssize_t bytesWritten;
 
     parsedEntry = parseUserEntry(buff);
     if(parsedEntry != NULL) {
-        write(socketfd,parsedEntry,100);
+        bytesWritten = write(socketfd,parsedEntry,BUFFERSIZE);
+        if(bytesWritten == -1) {
+            printf("Error at writing operation\n>");
+            return;
+        }
         read(socketfd,socketReception,BUFFERSIZE);
         if(strcmp(socketReception,"invalid number") == 0) {
-            printf("%s\n", socketReception);
+            printf("%s\n>", socketReception);
         } else {
             displayServerResponse(parsedEntry,socketReception);
             if(secondEntryRequired(parsedEntry)) {
                 answerFromClient = getSecondEntry();
                 if(answerFromClient != NULL) {
-                    write(socketfd,answerFromClient, BUFFERSIZE);
+                    bytesWritten = write(socketfd,answerFromClient, BUFFERSIZE);
+                    if(bytesWritten == -1) {
+                        printf("Error at writing operation\n>");
+                        return;
+                    }
                     read(socketfd,socketReception,BUFFERSIZE);
-                    printf("%s\n", socketReception);
+                    printf("%s\n>", socketReception);
                     clearBuffer(answerFromClient);
                 }
             }
         }
         clearBuffer(parsedEntry);
     } else {
-        printf("Invalid action\n");
+        printf("Invalid action\n>");
     }
 
-    clearBuffer(socketReception);
     free(socketReception);
 }
 
 char * parseUserEntry(char * entry) {
 
-    if(strcmp(entry,"check flight status") == 0 || strcmp(entry, "book flight\0") == 0
+    if(strcmp(entry,"check flight status") == 0 || strcmp(entry, "book flight") == 0
        || strcmp(entry,"cancel booking") == 0 || strcmp(entry,"cancel flight") == 0 ) {
         return parseFlightNumber(entry);
     } else if( strcmp(entry,"new flight") == 0) {
-        printf("Returning entry\n");
         return entry;
     }
 
@@ -76,12 +83,12 @@ char * parseFlightNumber(char * entry) {
 
     char * param;
 
-    printf("Enter flight number:\n");
+    printf("Enter flight number:\n>");
     if((param = readInputUntil('\n')) != NULL) {
         if(isNumericValue(param)) {
             return strcat(strcat(entry, " "),param);
         } else {
-            printf("Invalid flight number\n");
+            printf("Invalid flight number\n>");
         }
     }
 
@@ -90,25 +97,21 @@ char * parseFlightNumber(char * entry) {
 
 void displayServerResponse(char * firstEntry, char * serverResponse) {
 
-    printf("LLEGUE\n");
-    printf("Entry: %s\n",serverResponse);
-
-    if(strcmp(firstEntry,"check flight status") == 0
-       || strcmp(firstEntry, "book flight") == 0
-       || strcmp(firstEntry,"cancel booking") == 0) {
+    if(strncmp(firstEntry,"check flight status", strlen("check flight status")) == 0
+       || strncmp(firstEntry, "book flight",strlen("book flight")) == 0
+       || strncmp(firstEntry,"cancel booking",strlen("cancel booking")) == 0) {
 
         Flight flight = flightFromString(serverResponse);
         showFlight(flight);
 
-
-
-        if(strcmp(firstEntry,"book flight") == 0) {
+        if(strncmp(firstEntry,"book flight", strlen("book flight")) == 0) {
             printf("Select your seat please (e.g. B23)\n");
-        } else if(strcmp(firstEntry,"cancel booking") == 0) {
+        } else if(strncmp(firstEntry,"cancel booking", strlen("cancel booking")) == 0) {
             printf("Select the seat you want to cancel please (e.g. B23)\n");
         }
+        putchar('>');
     } else {
-        printf("%s\n", serverResponse);
+        printf("%s\n>", serverResponse);
     }
 }
 
@@ -135,7 +138,7 @@ char * readInputUntil(char limit) {
     }
 
     if(i == BUFFERSIZE) {
-        printf("Maximum entry length reached\n");
+        printf("Maximum entry length reached\n>");
         return NULL;
     }
 
@@ -164,13 +167,15 @@ int isValidSeat(const char * str) {
         return TRUE;
     }
 
-    printf("Invalid seat\n");
+    printf("Invalid seat\n>");
     return FALSE;
 }
 
 int secondEntryRequired(char * firstEntry) {
 
-    if(strcmp(firstEntry, "book flight") == 0 || strcmp(firstEntry,"cancel booking") == 0) {
+    if(strncmp(firstEntry, "book flight", strlen("book flight")) == 0
+       || strncmp(firstEntry,"cancel booking", strlen("cancel booking")) == 0) {
+
         return TRUE;
     }
 

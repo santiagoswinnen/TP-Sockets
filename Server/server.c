@@ -6,14 +6,11 @@ int serverfd;
 int handleSockets() {
 
     struct sockaddr_in servaddr;
-
     serverfd = socket(AF_INET, SOCK_STREAM, 0);
     bzero( &servaddr, sizeof(servaddr));
-
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htons(INADDR_ANY);
     servaddr.sin_port = htons(22000);
-
     bind(serverfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
     listen(serverfd, 10);
 
@@ -35,38 +32,51 @@ void checkForNewClients() {
 void attendClient(int clientfd) {
 
     char buffer[BUFFERSIZE] = {0};
-    char seat[BUFFERSIZE] = {0};
     char * invalid = "invalid number";
     char * flightData;
-    char * databaseResponseToSeat;
     int flightNumber;
+    ssize_t bytesRead;
+
+    printf("Atendiendo\n");
 
     while(1) {
-        printf("Antes del read\n");
-        read(clientfd,buffer,BUFFERSIZE);
-
-        flightNumber = checkFlightNumber(buffer);
-
-        if(flightNumber == 0) {
-            printf("No entre al else\n");
-            write(clientfd,invalid,BUFFERSIZE);
-        } else {
-            printf("Entre al else\n");
-            flightData = getFlightData(flightNumber);
-            printf("Por escribir flight data: %s\n",flightData);
+        clearBuffer(buffer);
+        bytesRead = read(clientfd,buffer,BUFFERSIZE);
+        if(bytesRead == -1) {
+            printf("Error at reading operation\n");
+        }
+        if(strcmp(buffer,"new flight") == 0) {
+            flightData = newFlight();
             write(clientfd,flightData,BUFFERSIZE);
-            if(seatNumberExpected(buffer)) {
-                printf("Espera seat number\n");
-                clearBuffer(buffer);
-                read(clientfd,seat,BUFFERSIZE);
-                databaseResponseToSeat = checkSeat(cutAction(buffer), seat);
-                write(clientfd,databaseResponseToSeat,BUFFERSIZE);
-                free(databaseResponseToSeat);
+        } else if (strncmp(buffer,"cancel flight",strlen("cancel flight")) == 0) {
+            flightData = cancelFlight(buffer);
+            write(clientfd,flightData,BUFFERSIZE);
+        } else {
+            flightNumber = checkFlightNumber(buffer);
+            if(flightNumber == 0) {
+                write(clientfd,invalid,BUFFERSIZE);
+            } else {
+                existingFlightActions(clientfd, flightNumber, buffer);
             }
         }
+    }
+}
 
-        clearBuffer(seat);
-        clearBuffer(buffer);
+void existingFlightActions(int clientfd, int flightNumber, char * buffer) {
+
+    char * flightData;
+    char * databaseResponseToSeat;
+    char seat[BUFFERSIZE] = {0};
+    ssize_t bytesRead;
+
+    flightData = getFlightData(flightNumber);
+    write(clientfd,flightData,BUFFERSIZE);
+    if(seatNumberExpected(buffer)) {
+        bytesRead = read(clientfd,seat,BUFFERSIZE);
+        if(bytesRead == -1) { printf("Error at reading operation\n"); }
+        databaseResponseToSeat = checkSeat(cutAction(buffer), seat);
+        write(clientfd,databaseResponseToSeat,BUFFERSIZE);
+        free(databaseResponseToSeat);
     }
 }
 
@@ -138,11 +148,31 @@ char * getFlightData(int flightNumber) {
 char * checkSeat(char * action, char * seat) {
     /*TODO*/
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
-    memcpy(ret,"Database reached successfully",strlen("Database reached successfully"));
+    memcpy(ret,"Seat successfully booked\0",strlen("Seat successfully booked\0"));
     return ret;
     /*el seat pasado como parametro se pasa con formato correcto (e.g. B23)
      * los valores van de la A a la G en mayuscula o minuscula y numero de 1 al 80
      * las acciones pueden ser "book" o "cancel"*/
+}
+
+char * newFlight() {
+    char * ret = malloc(sizeof(char)*BUFFERSIZE);
+    memcpy(ret,"New flight created\0",strlen("New flight created\0"));
+    return ret;
+    /*TODO*/
+    /*crear un vuelo y devolver un mensaje de error o exito con el nuevo numero
+     * del vuelo creado*/
+}
+
+char * cancelFlight(char * action) {
+    char * ret = malloc(sizeof(char)*BUFFERSIZE);
+    memcpy(ret,"Flight cancelled\0",strlen("Flight cancelled\0"));
+    return ret;
+    /*TODO*/
+    /*action viene con la forma "cancel flight [numero]"
+     * eliminarlo de la base de datos y retornar un string que diga
+     * si hubo exito o no*/
+
 }
 
 
