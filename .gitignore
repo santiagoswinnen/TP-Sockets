@@ -17,4 +17,8 @@ cmake-build-debug/
 
 Client/client
 
+client
+
 Server/server
+
+server
