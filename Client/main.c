@@ -17,11 +17,15 @@ int main() {
                    "\n\t-> cancel booking"
                    "\n\t-> check flight status"
                    "\n\t-> new flight"
-                   "\n\t-> cancel flight\n>");
-
+                   "\n\t-> cancel flight"
+                   "\n\t-> exit\n>");
     while(1) {
         c = getchar();
         if(c == '\n') {
+            if(strcmp(buff,"exit") == 0) {
+                close(socketfd);
+                return 1;
+            }
             startDialogue(buff, socketfd);
             clearBuffer(buff);
             i = 0;
