@@ -6,9 +6,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include "sqlite3.h"
 #define BUFFERSIZE 64
 #define TRUE 1
 #define FALSE 0
+#define ERRCHECK(err) {if (err!=NULL) {\
+						printf("%s\n", err);\
+						sqlite3_free(err);\
+						return 0;}}
 
 int handleSockets();
 void checkForNewClients();
@@ -23,3 +28,8 @@ int flightNumberIsValid(int number);
 char * getFlightData(int flightNumber);
 char * newFlight();
 char * cancelFlight(char * action);
+
+int callbackStdout(void * param, int argc, char ** argv, char ** colName);
+int callbackStdout(void * param, int argc, char ** argv, char ** colName);
+int initializeTables();
+int executeOperation(char * opStart, char * tableName, char * opEnd);

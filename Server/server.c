@@ -2,6 +2,9 @@
 #include "server.h"
 
 int serverfd;
+sqlite3 * db;
+
+typedef int tableField; // has as many strings as columns
 
 int handleSockets() {
 
@@ -130,6 +133,7 @@ char * cutAction(char * action) {
         memcpy(shortenedAction,"cancel",strlen("cancel"));
         shortenedAction[strlen("cancel")] = 0;
     }
+    return shortenedAction;
 }
 
 int flightNumberIsValid(int number) {
@@ -175,6 +179,93 @@ char * cancelFlight(char * action) {
 
 }
 
+/* Prints SQL command output */
+int callbackStdout(void * param, int argc, char ** argv, char ** colName) {
+   int i;
+   for(i = 0; i < argc; i++) {
+      printf("%s = %s\n", colName[i], argv[i] ? argv[i] : "NULL");
+   }
+   printf("\n");
+   return 0;
+}
 
+// devuelve solo una tupla. Tiene que pasarse una array de char * con tantos
+// char * como columnas tenga la tabla.
+int callback(void * param, int argc, char ** argv, char ** colName) {
+    char ** ret = (char **) param;
+    int i;
+    for(i = 0; i < argc; i++) {
+        if(argv[i] == NULL)
+            ret[i] = NULL;
+        else {
+            int len = strlen(argv[i]);
+            ret[i] = malloc(len + 1);
+            memcpy(ret[i], argv[i], len + 1);
+        }
+    }
+    return 0;
+}
 
+int initializeTables() {
+    int rc;
+    char * cmd_result = NULL;
+    char * flightTable = "CREATE TABLE flight(" \
+                         "id INT PRIMARY KEY NOT NULL," \
+                         "status INT NOT NULL );";
+    rc = sqlite3_exec(db, flightTable, callbackStdout, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    char * clientTable = "CREATE TABLE client(" \
+                         "id INT PRIMARY KEY NOT NULL );";
+    rc = sqlite3_exec(db, clientTable, callbackStdout, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    char * reservTable = "CREATE TABLE reservation(" \
+                         "client_id INT NOT NULL," \
+                         "flight_id INT NOT NULL," \
+                         "seat INT NOT NULL," \
+                         "reserv_status INT DEFAULT 1," \
+                         "FOREIGN KEY(client_id) REFERENCES client(id)," \
+                         "FOREIGN KEY(flight_id) REFERENCES flight(id),"\
+                         "PRIMARY KEY(client_id, flight_id, seat, reserv_status) );";
+    rc = sqlite3_exec(db, reservTable, callbackStdout, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    return rc == SQLITE_OK;
+}
 
+int executeOperation(char * opStart, char * tableName, char * opEnd) {
+    int rc;
+    char * cmd_result = NULL;
+    int opStartLen = strlen(opStart);
+    int nameLen = strlen(tableName);
+    int opEndLen = strlen(opEnd);
+    char * cmd = malloc(opStartLen + nameLen + opEndLen + 2);
+    strcpy(cmd, opStart);
+    strcpy(cmd + opStartLen, tableName);
+    strcpy(cmd + opStartLen + nameLen, opEnd);
+    cmd[opStartLen+nameLen+opEndLen+1] = ';';
+    cmd[opStartLen+nameLen+opEndLen+2] = '\0';
+    rc = sqlite3_exec(db, cmd, callback, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    return rc == SQLITE_OK;
+}
+
+int retreiveReservedFlights(char * flightNum, tableField ** matrix) {
+    sqlite3_stmt * res;
+    int error = 0;
+    int rec_count = 0;
+    const char * tail;
+    error = sqlite3_prepare_v2(db, "SELECT * FROM reservation",
+    1000, &res, &tail);
+    if (error != SQLITE_OK) {
+        printf("An error occurred");
+        return error;
+    }
+    while (sqlite3_step(res) == SQLITE_ROW) {
+        matrix[rec_count][0] = sqlite3_column_int(res, 0);
+        matrix[rec_count][1] = sqlite3_column_int(res, 1);
+        matrix[rec_count][2] = sqlite3_column_int(res, 2);
+        matrix[rec_count][3] = sqlite3_column_int(res, 3);
+        rec_count++;
+    }
+    sqlite3_finalize(res);
+    return error == SQLITE_OK;
+}
