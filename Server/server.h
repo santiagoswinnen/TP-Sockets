@@ -15,6 +15,11 @@
 						printf("%s\n", err);\
 						sqlite3_free(err);\
 						return 0;}}
+#define SEATS_PER_ROW 9
+#define ROWS 30
+#define SEATS (SEATS_PER_ROW*ROWS)
+
+typedef int tableField;
 
 int handleSockets();
 void checkForNewClients();
@@ -30,7 +35,14 @@ char * getFlightData(int flightNumber);
 char * newFlight();
 char * cancelFlight(char * action);
 
+int callbackOneTouple(void * param, int argc, char ** argv, char ** colName);
 int callbackStdout(void * param, int argc, char ** argv, char ** colName);
-int callbackStdout(void * param, int argc, char ** argv, char ** colName);
+char * SQLCommandToString(char * opStart, char * tableName, char * opEnd);
 int initializeTables();
 int executeOperation(char * opStart, char * tableName, char * opEnd);
+int updateFlightSeats(int flightId, int row, int col, int newStatus);
+int retreiveReservedFlights(char * flightNum, tableField ** matrix);
+char * getFlightSeats(int flightId);
+int executeOperationRetOneTouple(char * opStart, char * tableName,
+    char * opEnd, char ** touple);
+

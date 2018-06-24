@@ -4,8 +4,6 @@
 int serverfd;
 sqlite3 * db;
 
-typedef int tableField; // has as many strings as columns
-
 int handleSockets() {
 
     struct sockaddr_in servaddr;
@@ -197,7 +195,7 @@ int callbackStdout(void * param, int argc, char ** argv, char ** colName) {
 
 // devuelve solo una tupla. Tiene que pasarse una array de char * con tantos
 // char * como columnas tenga la tabla.
-int callback(void * param, int argc, char ** argv, char ** colName) {
+int callbackOneTouple(void * param, int argc, char ** argv, char ** colName) {
     char ** ret = (char **) param;
     int i;
     for(i = 0; i < argc; i++) {
@@ -212,6 +210,18 @@ int callback(void * param, int argc, char ** argv, char ** colName) {
     return 0;
 }
 
+int callbackOneField(void * param, int argc, char ** argv, char ** colName) {
+    char * ret = (char *) param;
+    int i;
+    for(i = 0; i < argc; i++) {
+        if(argv[i] != NULL) {
+            int len = strlen(argv[i]);
+            memcpy(ret, argv[i], len + 1);
+        }
+    }
+    return 0;
+}
+
 int initializeTables() {
     int rc;
     char * cmd_result = NULL;
@@ -219,10 +229,6 @@ int initializeTables() {
                          "id INT PRIMARY KEY NOT NULL," \
                          "status INT NOT NULL );";
     rc = sqlite3_exec(db, flightTable, callbackStdout, NULL, &cmd_result);
-    ERRCHECK(cmd_result);
-    char * clientTable = "CREATE TABLE client(" \
-                         "id INT PRIMARY KEY NOT NULL );";
-    rc = sqlite3_exec(db, clientTable, callbackStdout, NULL, &cmd_result);
     ERRCHECK(cmd_result);
     char * reservTable = "CREATE TABLE reservation(" \
                          "client_id INT NOT NULL," \
@@ -240,6 +246,14 @@ int initializeTables() {
 int executeOperation(char * opStart, char * tableName, char * opEnd) {
     int rc;
     char * cmd_result = NULL;
+    char * cmd = SQLCommandToString(opStart, tableName, opEnd);
+    rc = sqlite3_exec(db, cmd, callbackStdout, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    free(cmd);
+    return rc == SQLITE_OK;
+}
+
+char * SQLCommandToString(char * opStart, char * tableName, char * opEnd) {
     int opStartLen = strlen(opStart);
     int nameLen = strlen(tableName);
     int opEndLen = strlen(opEnd);
@@ -249,9 +263,37 @@ int executeOperation(char * opStart, char * tableName, char * opEnd) {
     strcpy(cmd + opStartLen + nameLen, opEnd);
     cmd[opStartLen+nameLen+opEndLen+1] = ';';
     cmd[opStartLen+nameLen+opEndLen+2] = '\0';
-    rc = sqlite3_exec(db, cmd, callback, NULL, &cmd_result);
+    return cmd;
+}
+
+// touple should have enough mem for n char *s, where n is the number of columns
+int executeOperationRetOneTouple(char * opStart, char * tableName,
+    char * opEnd, char ** touple) {
+
+    int rc;
+    char * cmd_result = NULL;
+    char * cmd = SQLCommandToString(opStart, tableName, opEnd);
+    rc = sqlite3_exec(db, cmd, callbackOneTouple, (void *)touple, &cmd_result);
     ERRCHECK(cmd_result);
+    free(cmd);
     return rc == SQLITE_OK;
+}
+
+char * getFlightSeats(int flightId) {
+    int rc;
+    char * cmd_result = NULL;
+    char * id = malloc(12);
+    sprintf(id, "%d", flightId);
+    char * cmd = SQLCommandToString("SELECT seats FROM flight WHERE id = ",
+        "", id);
+    char * seats = calloc(1, SEATS + 1);
+    rc = sqlite3_exec(db, cmd, callbackOneField, seats, &cmd_result);
+    ERRCHECK(cmd_result);
+    free(id);
+    free(cmd);
+    if(seats[0] == '\0' || rc != SQLITE_OK)
+        return NULL;
+    return seats;
 }
 
 int retreiveReservedFlights(char * flightNum, tableField ** matrix) {
@@ -274,4 +316,19 @@ int retreiveReservedFlights(char * flightNum, tableField ** matrix) {
     }
     sqlite3_finalize(res);
     return error == SQLITE_OK;
+}
+
+int updateFlightSeats(int flightId, int row, int col, int newStatus) {
+    int rc;
+    char * cmd_result = NULL;
+    char * opStart = "UPDATE flight SET seats = '";
+    char * opEnd1 = "' WHERE id = ";
+    char * opEnd = malloc(strlen(opEnd1) + 12);
+    sprintf(opEnd, "%s%d", opEnd1, flightId);
+    char * seats = getFlightSeats(flightId);
+    seats[row * SEATS_PER_ROW + col] = newStatus;
+    char * cmd = SQLCommandToString(opStart, seats, opEnd);
+    rc = sqlite3_exec(db, cmd, callbackStdout, NULL, &cmd_result);
+    ERRCHECK(cmd_result);
+    return 0;
 }
