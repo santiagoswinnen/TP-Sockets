@@ -34,8 +34,9 @@ void showFlight(Flight flight) {
             str[i] = '1';
         }
     }
-    flight = flightFromString(str);
-    printf("Sorry, flight preview is under construction\n");
+
+    //flight = flightFromString(str);
+
     printf("        ___\n");
     printf("       /   \\\n");
     printf("      /     \\\n");

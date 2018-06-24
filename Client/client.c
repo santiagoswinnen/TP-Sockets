@@ -29,7 +29,6 @@ void startDialogue(char * buff, int socketfd) {
 
     char * parsedEntry;
     char * socketReception = malloc(sizeof(char)*BUFFERSIZE);
-    char * answerFromClient;
     ssize_t bytesWritten;
 
     parsedEntry = parseUserEntry(buff);
@@ -43,20 +42,7 @@ void startDialogue(char * buff, int socketfd) {
         if(strcmp(socketReception,"invalid number") == 0) {
             printf("%s\n>", socketReception);
         } else {
-            displayServerResponse(parsedEntry,socketReception);
-            if(secondEntryRequired(parsedEntry)) {
-                answerFromClient = getSecondEntry();
-                if(answerFromClient != NULL) {
-                    bytesWritten = write(socketfd,answerFromClient, BUFFERSIZE);
-                    if(bytesWritten == -1) {
-                        printf("Error at writing operation\n>");
-                        return;
-                    }
-                    read(socketfd,socketReception,BUFFERSIZE);
-                    printf("%s\n>", socketReception);
-                    clearBuffer(answerFromClient);
-                }
-            }
+            successfulServerResponse(parsedEntry, socketReception, socketfd);
         }
         clearBuffer(parsedEntry);
     } else {
@@ -64,6 +50,27 @@ void startDialogue(char * buff, int socketfd) {
     }
 
     free(socketReception);
+}
+
+void successfulServerResponse(char * parsedEntry, char * socketReception, int socketfd ) {
+
+    char * answerFromClient;
+    ssize_t bytesWritten;
+
+    displayServerResponse(parsedEntry,socketReception);
+    if(secondEntryRequired(parsedEntry)) {
+        answerFromClient = getSecondEntry();
+        if(answerFromClient != NULL) {
+            bytesWritten = write(socketfd,answerFromClient, BUFFERSIZE);
+            if(bytesWritten == -1) {
+                printf("Error at writing operation\n>");
+                return;
+            }
+            read(socketfd,socketReception,BUFFERSIZE);
+            displaySecondResponse(socketReception);
+            clearBuffer(answerFromClient);
+        }
+    }
 }
 
 char * parseUserEntry(char * entry) {
@@ -127,6 +134,19 @@ char * getSecondEntry() {
     return NULL;
 }
 
+
+void displaySecondResponse(char * socketReception) {
+
+    Flight modifiedFlight;
+
+    if(socketReception[0] == '1' || socketReception[0] == '0') {
+        modifiedFlight = flightFromString(socketReception);
+        showFlight(modifiedFlight);
+    } else {
+        printf("%s\n", socketReception);
+    }
+}
+
 char * readInputUntil(char limit) {
 
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
@@ -149,6 +169,7 @@ char * readInputUntil(char limit) {
 int isNumericValue(const char * str) {
 
     int i = 0;
+
     while(str[i] != 0) {
         if(!isdigit(str[i++])) {
             return FALSE;
@@ -178,7 +199,6 @@ int secondEntryRequired(char * firstEntry) {
 
         return TRUE;
     }
-
     return FALSE;
 }
 

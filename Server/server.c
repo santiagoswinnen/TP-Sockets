@@ -23,10 +23,8 @@ int handleSockets() {
 
 void checkForNewClients() {
     int newfd = accept(serverfd, (struct sockaddr*) NULL, NULL);
-    printf("Chequeando\n");
     if(newfd > 0) {
         pthread_t thread;
-        printf("Por crear el thread\n");
         if(pthread_create(&thread, NULL, (void * (*)(void *))attendClient, &newfd) == -1) {
             printf("Error creating thread\n");
         }
@@ -40,21 +38,21 @@ void attendClient(const int * clientFd) {
     char * flightData;
     int flightNumber;
     int clientfd = *clientFd;
+    int retVal;
     ssize_t bytesRead;
-
-    printf("Atendiendo\n");
 
     while(1) {
         clearBuffer(buffer);
         bytesRead = read(clientfd,buffer,BUFFERSIZE);
         if(bytesRead == -1) {
             printf("Error at reading operation\n");
+            terminateClientThread(clientfd);
         }
         if(strcmp(buffer,"new flight") == 0) {
             flightData = newFlight();
             write(clientfd,flightData,BUFFERSIZE);
         } else if (strcmp(buffer,"exit") == 0) {
-            return;
+            terminateClientThread(clientfd);
         } else if (strncmp(buffer,"cancel flight",strlen("cancel flight")) == 0) {
             flightData = cancelFlight(buffer);
             write(clientfd,flightData,BUFFERSIZE);
@@ -63,13 +61,16 @@ void attendClient(const int * clientFd) {
             if(flightNumber == 0) {
                 write(clientfd,invalid,BUFFERSIZE);
             } else {
-                existingFlightActions(clientfd, flightNumber, buffer);
+                retVal = existingFlightActions(clientfd, flightNumber, buffer);
+                if(retVal == -1) { terminateClientThread(clientfd); }
             }
         }
     }
 }
 
-void existingFlightActions(int clientfd, int flightNumber, char * buffer) {
+
+
+int existingFlightActions(int clientfd, int flightNumber, char * buffer) {
 
     char * flightData;
     char * databaseResponseToSeat;
@@ -80,11 +81,16 @@ void existingFlightActions(int clientfd, int flightNumber, char * buffer) {
     write(clientfd,flightData,BUFFERSIZE);
     if(seatNumberExpected(buffer)) {
         bytesRead = read(clientfd,seat,BUFFERSIZE);
-        if(bytesRead == -1) { printf("Error at reading operation\n"); }
+        if(bytesRead == -1) {
+            printf("Error at reading operation\n");
+            return -1;
+        }
         databaseResponseToSeat = checkSeat(cutAction(buffer), seat);
         write(clientfd,databaseResponseToSeat,BUFFERSIZE);
         free(databaseResponseToSeat);
     }
+
+    return 1;
 }
 
 int checkFlightNumber(char * buffer) {
@@ -138,6 +144,11 @@ char * cutAction(char * action) {
         shortenedAction[strlen("cancel")] = 0;
     }
     return shortenedAction;
+}
+
+void terminateClientThread(int fd) {
+    close(fd);
+    pthread_exit(NULL);
 }
 
 int flightNumberIsValid(int number) {

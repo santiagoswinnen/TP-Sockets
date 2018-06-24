@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "sqlite3.h"
-#define BUFFERSIZE 64
+#define BUFFERSIZE 512
 #define TRUE 1
 #define FALSE 0
 #define ERRCHECK(err) {if (err!=NULL) {\
@@ -24,12 +24,13 @@ typedef int tableField;
 int handleSockets();
 void checkForNewClients();
 void attendClient(const int * clientfd);
-void existingFlightActions(int clientfd, int flightNumber, char * buffer);
+int existingFlightActions(int clientfd, int flightNumber, char * buffer);
 int checkFlightNumber(char * buffer);
 char * checkSeat(char * action, char * seat);
 int seatNumberExpected(char * action);
 char * cutAction(char * action);
 void clearBuffer(char * buffer);
+void terminateClientThread(int fd);
 int flightNumberIsValid(int number);
 char * getFlightData(int flightNumber);
 char * newFlight();
