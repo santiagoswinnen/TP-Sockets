@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include <pthread.h>
 #include "sqlite3.h"
 #define BUFFERSIZE 64
 #define TRUE 1
@@ -17,7 +18,7 @@
 
 int handleSockets();
 void checkForNewClients();
-void attendClient(int clientfd);
+void attendClient(const int * clientfd);
 void existingFlightActions(int clientfd, int flightNumber, char * buffer);
 int checkFlightNumber(char * buffer);
 char * checkSeat(char * action, char * seat);

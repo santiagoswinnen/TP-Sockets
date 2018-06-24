@@ -1,5 +1,5 @@
-
 #include "server.h"
+
 
 int serverfd;
 sqlite3 * db;
@@ -26,18 +26,20 @@ int handleSockets() {
 void checkForNewClients() {
     int newfd = accept(serverfd, (struct sockaddr*) NULL, NULL);
     if(newfd > 0) {
-        if(fork() == 0) {
-            attendClient(newfd);
+        pthread_t thread;
+        if(pthread_create(&thread, NULL, (void * (*)(void *))attendClient, &newfd) == -1) {
+            printf("Error creating thread\n");
         }
     }
 }
 
-void attendClient(int clientfd) {
+void attendClient(const int * clientFd) {
 
     char buffer[BUFFERSIZE] = {0};
     char * invalid = "invalid number";
     char * flightData;
     int flightNumber;
+    int clientfd = *clientFd;
     ssize_t bytesRead;
 
     printf("Atendiendo\n");

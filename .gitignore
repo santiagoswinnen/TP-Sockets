@@ -22,3 +22,5 @@ client
 Server/server
 
 server
+
+*.db
