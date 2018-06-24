@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "sqlite3.h"
-#define BUFFERSIZE 64
+#define BUFFERSIZE 512
 #define TRUE 1
 #define FALSE 0
 #define ERRCHECK(err) {if (err!=NULL) {\

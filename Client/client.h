@@ -7,7 +7,7 @@
 #include <string.h>
 #include "flight.h"
 
-#define BUFFERSIZE 64
+#define BUFFERSIZE 512
 #define TRUE 1
 #define FALSE 0
 
@@ -19,6 +19,7 @@ char * parseFlightNumber(char * entry);
 void displayServerResponse(char * originalEntry, char * serverResponse);
 int secondEntryRequired(char * firstEntry);
 char * getSecondEntry();
+void displaySecondResponse(char * socketReception);
 char * readInputUntil(char limit);
 int isNumericValue(const char * str);
 int isValidSeat(const char * str);

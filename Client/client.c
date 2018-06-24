@@ -67,7 +67,7 @@ void successfulServerResponse(char * parsedEntry, char * socketReception, int so
                 return;
             }
             read(socketfd,socketReception,BUFFERSIZE);
-            printf("%s\n>", socketReception);
+            displaySecondResponse(socketReception);
             clearBuffer(answerFromClient);
         }
     }
@@ -134,6 +134,19 @@ char * getSecondEntry() {
     return NULL;
 }
 
+
+void displaySecondResponse(char * socketReception) {
+
+    Flight modifiedFlight;
+
+    if(socketReception[0] == '1' || socketReception[0] == '0') {
+        modifiedFlight = flightFromString(socketReception);
+        showFlight(modifiedFlight);
+    } else {
+        printf("%s\n", socketReception);
+    }
+}
+
 char * readInputUntil(char limit) {
 
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
@@ -186,7 +199,6 @@ int secondEntryRequired(char * firstEntry) {
 
         return TRUE;
     }
-
     return FALSE;
 }
 
