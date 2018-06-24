@@ -43,8 +43,6 @@ void attendClient(const int * clientFd) {
     int retVal;
     ssize_t bytesRead;
 
-    printf("Atendiendo\n");
-
     while(1) {
         clearBuffer(buffer);
         bytesRead = read(clientfd,buffer,BUFFERSIZE);
@@ -71,6 +69,8 @@ void attendClient(const int * clientFd) {
         }
     }
 }
+
+
 
 int existingFlightActions(int clientfd, int flightNumber, char * buffer) {
 

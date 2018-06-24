@@ -13,6 +13,7 @@
 
 int openSocket();
 void startDialogue(char * buff, int socketfd);
+void successfulServerResponse(char * parsedEntry, char * socketReception, int socketfd );
 char * parseUserEntry(char * entry);
 char * parseFlightNumber(char * entry);
 void displayServerResponse(char * originalEntry, char * serverResponse);
