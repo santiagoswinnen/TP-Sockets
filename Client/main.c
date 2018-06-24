@@ -1,11 +1,27 @@
 #include <stdio.h>
+#include <bits/signum.h>
+#include <signal.h>
 #include "client.h"
 
+int socketfd;
+int ended = 0;
+
+void sigintHandler(int sig_num) {
+    signal(SIGINT, sigintHandler);
+    write(socketfd,"exit\0",BUFFERSIZE);
+    close(socketfd);
+    putchar('\n');
+    exit(1);
+}
+
 int main() {
+
+    signal(SIGINT, sigintHandler);
+
     char buff[BUFFERSIZE] = "";
     int c;
     int i = 0;
-    int socketfd = openSocket();
+    socketfd = openSocket();
 
     if(socketfd < 0) {
         printf("Exiting with error\n");
@@ -19,7 +35,7 @@ int main() {
                    "\n\t-> new flight"
                    "\n\t-> cancel flight"
                    "\n\t-> exit\n>");
-    while(1) {
+    while(!ended) {
         c = getchar();
         if(c == '\n') {
             if(strcmp(buff,"exit") == 0) {
@@ -36,4 +52,7 @@ int main() {
         }
 
     }
+
+    return 1;
 }
+

@@ -19,12 +19,13 @@
 int handleSockets();
 void checkForNewClients();
 void attendClient(const int * clientfd);
-void existingFlightActions(int clientfd, int flightNumber, char * buffer);
+int existingFlightActions(int clientfd, int flightNumber, char * buffer);
 int checkFlightNumber(char * buffer);
 char * checkSeat(char * action, char * seat);
 int seatNumberExpected(char * action);
 char * cutAction(char * action);
 void clearBuffer(char * buffer);
+void terminateClientThread(int fd);
 int flightNumberIsValid(int number);
 char * getFlightData(int flightNumber);
 char * newFlight();
