@@ -25,8 +25,10 @@ int handleSockets() {
 
 void checkForNewClients() {
     int newfd = accept(serverfd, (struct sockaddr*) NULL, NULL);
+    printf("Chequeando\n");
     if(newfd > 0) {
         pthread_t thread;
+        printf("Por crear el thread\n");
         if(pthread_create(&thread, NULL, (void * (*)(void *))attendClient, &newfd) == -1) {
             printf("Error creating thread\n");
         }
@@ -53,6 +55,8 @@ void attendClient(const int * clientFd) {
         if(strcmp(buffer,"new flight") == 0) {
             flightData = newFlight();
             write(clientfd,flightData,BUFFERSIZE);
+        } else if (strcmp(buffer,"exit") == 0) {
+            return;
         } else if (strncmp(buffer,"cancel flight",strlen("cancel flight")) == 0) {
             flightData = cancelFlight(buffer);
             write(clientfd,flightData,BUFFERSIZE);

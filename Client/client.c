@@ -161,8 +161,8 @@ int isValidSeat(const char * str) {
 
     int i = 0;
 
-    if(((str[i] >= 'A' && str[i] <= 'G') || (str[i] >= 'a' && str[i] <= 'g'))
-       && isNumericValue(str + 1) && atoi(str) <= 80) {
+    if(((str[i] >= 'A' && str[i] <= 'I') || (str[i] >= 'a' && str[i] <= 'i'))
+       && isNumericValue(str + 1) && atoi(str) <= ROWS) {
 
         return TRUE;
     }

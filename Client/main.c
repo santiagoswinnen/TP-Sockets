@@ -23,6 +23,7 @@ int main() {
         c = getchar();
         if(c == '\n') {
             if(strcmp(buff,"exit") == 0) {
+                write(socketfd,buff,BUFFERSIZE);
                 close(socketfd);
                 return 1;
             }

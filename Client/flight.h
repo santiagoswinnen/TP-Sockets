@@ -1,11 +1,11 @@
 #include <malloc.h>
 #define ONTIME 1
-#define SEATS_PER_ROW 7
-#define ROWS 80
+#define SEATS_PER_ROW 9
+#define ROWS 30
 #define SEATS (SEATS_PER_ROW*ROWS)
 
 typedef struct flightCDT {
-    char seats [7][80];
+    char seats [SEATS_PER_ROW][ROWS];
     int number;
     int status;
 } flight;
