@@ -21,8 +21,6 @@ Flight flightFromString(const char * string) {
         }
     }
 
-    printf("Imprimiendo string de 1's y 0's: %s\n", string);
-
     return f;
 }
 

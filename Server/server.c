@@ -214,8 +214,10 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                 else {
                     insertReservation(clientid,flightNumber,row,col,1);
                 }
-                strcpy(ret,"Seat successfully booked.");
-                ret[strlen("Seat successfully booked.")] = 0;
+                char * temp = getFlightSeats(flightNumber);
+                strcpy(ret,temp);
+                free(temp);
+                ret[SEATS] = 0;
             }
         }
         else {
