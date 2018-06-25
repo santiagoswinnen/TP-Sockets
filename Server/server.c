@@ -158,18 +158,20 @@ int isValidSQL(char * selectStatement) {
     int error;
     const char * tail;
     error = sqlite3_prepare_v2(db, selectStatement, 1000, &res, &tail);
+    printf("DENTRO DE IS VALID SQL, RESULTADO DE LA CONSULTA FUE: %s \n",error == SQLITE_OK ? "bien" : "mal");
     if (error == SQLITE_OK) {
         if(sqlite3_step(res) == SQLITE_ROW) {
             return 1;
         }
     }
-
     return 0;
 }
 
 int flightNumberIsValid(int number) {
+
+    printf("VALIDANDO FLIGHT NUMBER, SE PASO %d POR PARAMETRO \n",number);
     char sql[100];
-    sprintf(sql,"SELECT * FROM flight WHERE flight_id = %d",number);
+    sprintf(sql,"SELECT * FROM flight WHERE id = %d",number);
     return isValidSQL(sql);
 }
 
@@ -470,14 +472,14 @@ int updateFlightStatus(int status, int flight_id) {
     int error;
     char * result;
     const char * tail;
-    sprintf(select_sql,"SELECT * FROM flight WHERE flight_id = %d",flight_id);
+    sprintf(select_sql,"SELECT * FROM flight WHERE id = %d",flight_id);
     error = sqlite3_prepare_v2(db, select_sql, 1000, &res, &tail);
     if (error != SQLITE_OK) {
         printf("Error in database, try again later...\n ");
         return error;
     }
     if(sqlite3_step(res) == SQLITE_ROW) {
-        sprintf(sql,"UPDATE flight SET status = %d WHERE flight_id = %d",status,flight_id);
+        sprintf(sql,"UPDATE flight SET status = %d WHERE id = %d",status,flight_id);
         if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
             printf("Error updating flight status");
         }
@@ -534,7 +536,7 @@ int checkFlightStatus(int flightid) {
     int error = 0;
     int status;
     const char * tail;
-    sprintf(sql,"SELECT status FROM flight WHERE flight_id = %d",flightid);
+    sprintf(sql,"SELECT status FROM flight WHERE id = %d",flightid);
     error = sqlite3_prepare_v2(db, sql, 1000, &res, &tail);
     if (error != SQLITE_OK) {
         printf("Error in database, try again later...\n ");

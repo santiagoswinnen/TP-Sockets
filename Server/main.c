@@ -9,6 +9,7 @@ int main() {
 		fprintf(stderr, "Database cannot be open: %s\n", sqlite3_errmsg(db));
 		return 1;
 	}
+	initializeTables();
     handleSockets();
     sqlite3_close(db);
     return 0;
