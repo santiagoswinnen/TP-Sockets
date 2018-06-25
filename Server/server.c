@@ -350,21 +350,6 @@ int callbackStdout(void * param, int argc, char ** argv, char ** colName) {
    return 0;
 }
 
-int callbackOneTouple(void * param, int argc, char ** argv, char ** colName) {
-    char ** ret = (char **) param;
-    int i;
-    for(i = 0; i < argc; i++) {
-        if(argv[i] == NULL)
-            ret[i] = NULL;
-        else {
-            int len = strlen(argv[i]);
-            ret[i] = malloc(len + 1);
-            memcpy(ret[i], argv[i], len + 1);
-        }
-    }
-    return 0;
-}
-
 int callbackOneField(void * param, int argc, char ** argv, char ** colName) {
     char * ret = (char *) param;
     int i;
