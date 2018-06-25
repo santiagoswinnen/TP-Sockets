@@ -212,6 +212,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
     int row,col;
     char letter;
     char sql[200];
+    char * temp;
     char * ptr;
     char * seatData;
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
@@ -241,18 +242,18 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                     else {
                         insertReservation(clientid,flightNumber,row,col,1);
                     }
-                    return getFlightSeats(flightNumber);
+                     temp = getFlightSeats(flightNumber);
+                    strcpy(ret,temp);
+                    free(temp);
+                    ret[SEATS] = 0;
                 }
-                char * temp = getFlightSeats(flightNumber);
-                strcpy(ret,temp);
-                free(temp);
-                ret[SEATS] = 0;
+               
             }
             else {
-                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
-                updateFlightSeats(flightNumber,row,col,'0');
-                if(isValidSQL(sql)) {
-                    updateReservation(clientid,flightNumber,row,col,0);
+
+                if(seatData[seatNum] == '0') {
+                    strcpy(ret,"The seat you selected is not booked.");
+                    ret[strlen("The seat you selected is not booked.")] = 0;
                 }
                 else {
                     sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
@@ -263,7 +264,10 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                     else {
                         insertReservation(clientid,flightNumber,row,col,0);
                     }
-                    return getFlightSeats(flightNumber);
+                    temp = getFlightSeats(flightNumber);
+                    strcpy(ret,temp);
+                    free(temp);
+                    ret[SEATS] = 0;
                 }
             }   
     }
