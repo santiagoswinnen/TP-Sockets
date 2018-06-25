@@ -76,9 +76,11 @@ int existingFlightActions(int clientfd, int flightNumber, char * buffer) {
     char * flightData;
     char * databaseResponseToSeat;
     char seat[BUFFERSIZE] = {0};
+    char invalidFlight[BUFFERSIZE] = {"Flight has either been cancelled or does not exist\0"};
     ssize_t bytesRead;
 
     if(flightIsCanceled(flightNumber)) {
+        write(clientfd,invalidFlight,BUFFERSIZE);
         return 1;
     }
     flightData = getFlightData(flightNumber);

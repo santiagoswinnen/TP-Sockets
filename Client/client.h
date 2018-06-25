@@ -16,7 +16,7 @@ void startDialogue(char * buff, int socketfd);
 void successfulServerResponse(char * parsedEntry, char * socketReception, int socketfd );
 char * parseUserEntry(char * entry);
 char * parseFlightNumber(char * entry);
-void displayServerResponse(char * originalEntry, char * serverResponse);
+int displayServerResponse(char * originalEntry, char * serverResponse);
 int secondEntryRequired(char * firstEntry);
 char * getSecondEntry();
 void displaySecondResponse(char * socketReception);

@@ -56,8 +56,12 @@ void successfulServerResponse(char * parsedEntry, char * socketReception, int so
 
     char * answerFromClient;
     ssize_t bytesWritten;
+    int resp;
 
-    displayServerResponse(parsedEntry,socketReception);
+    resp = displayServerResponse(parsedEntry,socketReception);
+    if(resp == 0) {
+        return;
+    }
     if(secondEntryRequired(parsedEntry)) {
         answerFromClient = getSecondEntry();
         if(answerFromClient != NULL) {
@@ -102,11 +106,16 @@ char * parseFlightNumber(char * entry) {
     return NULL;
 }
 
-void displayServerResponse(char * firstEntry, char * serverResponse) {
+int displayServerResponse(char * firstEntry, char * serverResponse) {
 
     if(strncmp(firstEntry,"check flight status", strlen("check flight status")) == 0
        || strncmp(firstEntry, "book flight",strlen("book flight")) == 0
        || strncmp(firstEntry,"cancel booking",strlen("cancel booking")) == 0) {
+
+        if(strcmp("Flight has either been cancelled or does not exist",serverResponse) == 0) {
+            printf("%s\n>", serverResponse);
+            return 0;
+        }
 
         Flight flight = flightFromString(serverResponse);
         showFlight(flight);
@@ -120,6 +129,8 @@ void displayServerResponse(char * firstEntry, char * serverResponse) {
     } else {
         printf("%s\n>", serverResponse);
     }
+
+    return 1;
 }
 
 char * getSecondEntry() {
