@@ -262,7 +262,7 @@ char * newFlight() {
     char str[100];
     fillSeats(seats);
     int error;
-    sprintf(sql,"INSERT INTO flight (status,seats) VALUES (1,%s)",flight_num,seats);
+    sprintf(sql,"INSERT INTO flight (id,status,seats) VALUES (%d,1,%s)",flight_num,seats);
     if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
         strcpy(result,"Error creating flight");
     }
