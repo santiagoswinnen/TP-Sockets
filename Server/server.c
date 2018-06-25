@@ -171,7 +171,7 @@ int flightNumberIsValid(int number) {
 
     printf("VALIDANDO FLIGHT NUMBER, SE PASO %d POR PARAMETRO \n",number);
     char sql[100];
-    sprintf(sql,"SELECT * FROM flight WHERE id = %d",number);
+    sprintf(sql,"SELECT * FROM flight WHERE id = %d;",number);
     return isValidSQL(sql);
 }
 
@@ -203,7 +203,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                 ret[strlen("The seat you wish to book is already occupied.")] = 0;
             }
             else {
-                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d",flightNumber,clientid,row,col);
+                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
                 updateFlightSeats(flightNumber,row,col,1);
                 if(isValidSQL(sql)) {
                     updateReservation(clientid,flightNumber,row,col,1);
@@ -221,7 +221,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                 ret[strlen("The reservation does not exist")] = 0;
             }
             else {
-                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d",flightNumber,clientid,row,col);
+                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
                 updateFlightSeats(flightNumber,row,col,0);
                 if(isValidSQL(sql)) {
                     updateReservation(clientid,flightNumber,row,col,0);
@@ -268,7 +268,7 @@ char * newFlight() {
     char str[100];
     fillSeats(seats);
     int error;
-    sprintf(sql,"INSERT INTO flight (id,status,seats) VALUES (%d,1,%s)",flight_num,seats);
+    sprintf(sql,"INSERT INTO flight (id,status,seats) VALUES (%d,1,%s);",flight_num,seats);
     if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
         strcpy(result,"Error creating flight");
     }
@@ -293,7 +293,7 @@ char * cancelFlight(char * action) {
     }
 
     if(flightNumberIsValid(flight_number)) {
-        sprintf(sql,"UPDATE flight SET status = 0 WHERE id = %d",flight_number);
+        sprintf(sql,"UPDATE flight SET status = 0 WHERE id = %d;",flight_number);
         if( (error = sqlite3_exec(db,sql,NULL,NULL,NULL)) != SQLITE_OK) {
             strcpy(ret,"Error deleting flight");
             ret[strlen("Error deleting flight")] = 0;
@@ -355,9 +355,10 @@ int initializeTables() {
     int rc;
     char * cmd_result = NULL;
     char * flightTable = "CREATE TABLE flight(" \
-                         "id INT PRIMARY KEY NOT NULL," \
-                         "status INT NOT NULL " \
-                         "seats TEXT NOT NULL);";
+                         "id NOT NULL," \
+                         "status INT NOT NULL, " \
+                         "seats TEXT NOT NULL, " \
+                         "PRIMARY KEY(id));";
     rc = sqlite3_exec(db, flightTable, callbackStdout, NULL, &cmd_result);
     ERRCHECK(cmd_result);
     char * reservTable = "CREATE TABLE reservation(" \
@@ -472,14 +473,14 @@ int updateFlightStatus(int status, int flight_id) {
     int error;
     char * result;
     const char * tail;
-    sprintf(select_sql,"SELECT * FROM flight WHERE id = %d",flight_id);
+    sprintf(select_sql,"SELECT * FROM flight WHERE id = %d;",flight_id);
     error = sqlite3_prepare_v2(db, select_sql, 1000, &res, &tail);
     if (error != SQLITE_OK) {
         printf("Error in database, try again later...\n ");
         return error;
     }
     if(sqlite3_step(res) == SQLITE_ROW) {
-        sprintf(sql,"UPDATE flight SET status = %d WHERE id = %d",status,flight_id);
+        sprintf(sql,"UPDATE flight SET status = %d WHERE id = %d;",status,flight_id);
         if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
             printf("Error updating flight status");
         }
@@ -496,7 +497,7 @@ int insertReservation(int clientid, int flightid, int seatrow, int seatcol, int 
     char sql[200];
     char * result;
     int error;
-    sprintf(sql,"INSERT INTO reservation (client_id,flight_id,seatRow,seatCol,status) VALUES (%d,%d,%d,%d,%d)",clientid,flightid,seatrow,seatcol,status);
+    sprintf(sql,"INSERT INTO reservation (client_id,flight_id,seatRow,seatCol,status) VALUES (%d,%d,%d,%d,%d);",clientid,flightid,seatrow,seatcol,status);
     if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
         printf("Error creating reservation");
     }
@@ -511,14 +512,14 @@ int updateReservation(int clientid, int flightid, int seatrow, int seatcol, int 
     int error;
     char * result;
     const char * tail;
-    sprintf(select_sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d",flightid,clientid,seatrow,seatcol);
+    sprintf(select_sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightid,clientid,seatrow,seatcol);
     error = sqlite3_prepare_v2(db, select_sql, 1000, &res, &tail);
     if (error != SQLITE_OK) {
         printf("Error in database, try again later...\n ");
         return error;
     }
     if(sqlite3_step(res) == SQLITE_ROW) {
-        sprintf(sql,"UPDATE reservation SET status = %d WHERE client_id = %d AND flight_id = %d AND seatRow = %d AND seatCol = %d",status,clientid,flightid,seatrow,seatcol);
+        sprintf(sql,"UPDATE reservation SET status = %d WHERE client_id = %d AND flight_id = %d AND seatRow = %d AND seatCol = %d;",status,clientid,flightid,seatrow,seatcol);
         if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
             printf("Error updating reservation");
         }
@@ -536,7 +537,7 @@ int checkFlightStatus(int flightid) {
     int error = 0;
     int status;
     const char * tail;
-    sprintf(sql,"SELECT status FROM flight WHERE id = %d",flightid);
+    sprintf(sql,"SELECT status FROM flight WHERE id = %d;",flightid);
     error = sqlite3_prepare_v2(db, sql, 1000, &res, &tail);
     if (error != SQLITE_OK) {
         printf("Error in database, try again later...\n ");
