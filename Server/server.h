@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include "sqlite3.h"
+#define SEAT_QTY 270
 #define BUFFERSIZE 512
 #define TRUE 1
 #define FALSE 0
@@ -46,4 +47,11 @@ int retreiveReservedFlights(char * flightNum, tableField ** matrix);
 char * getFlightSeats(int flightId);
 int executeOperationRetOneTouple(char * opStart, char * tableName,
     char * opEnd, char ** touple);
+int letterToInt(char c);
+int isValidSQL(char * selectStatement);
 
+void fillSeats(char * seats);
+int checkFlightStatus(int flightid);
+int updateReservation(int clientid, int flightid, int seatrow, int seatcol, int status);
+int insertReservation(int clientid, int flightid, int seatrow, int seatcol, int status);
+int insertFlight(int flight_id);

@@ -203,11 +203,18 @@ int secondEntryRequired(char * firstEntry) {
 }
 
 void clearBuffer(char * buffer) {
-
     int i;
-
     for(i = 0; i < BUFFERSIZE; i++) {
         buffer[i] = 0;
     }
 }
+
+
+
+
+
+
+
+
+
 
