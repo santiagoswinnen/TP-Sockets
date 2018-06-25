@@ -153,6 +153,7 @@ void displaySecondResponse(char * socketReception) {
     if(socketReception[0] == '1' || socketReception[0] == '0') {
         modifiedFlight = flightFromString(socketReception);
         showFlight(modifiedFlight);
+        printf("Your operation has been completed successfully\n>");
     } else {
         printf("%s\n", socketReception);
     }
@@ -194,7 +195,7 @@ int isValidSeat(const char * str) {
     int i = 0;
 
     if(((str[i] >= 'A' && str[i] <= 'I') || (str[i] >= 'a' && str[i] <= 'i'))
-       && isNumericValue(str + 1) && atoi(str) <= ROWS) {
+       && isNumericValue(str + 1) && atoi(str + 1) <= ROWS) {
 
         return TRUE;
     }
