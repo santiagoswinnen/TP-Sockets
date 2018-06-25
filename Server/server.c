@@ -207,7 +207,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
             }
             else {
                 sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
-                updateFlightSeats(flightNumber,row,col,1);
+                updateFlightSeats(flightNumber,row,col,'1');
                 if(isValidSQL(sql)) {
                     updateReservation(clientid,flightNumber,row,col,1);
                 }
@@ -225,7 +225,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
             }
             else {
                 sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
-                updateFlightSeats(flightNumber,row,col,0);
+                updateFlightSeats(flightNumber,row,col,'0');
                 if(isValidSQL(sql)) {
                     updateReservation(clientid,flightNumber,row,col,0);
                 }
