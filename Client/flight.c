@@ -21,21 +21,13 @@ Flight flightFromString(const char * string) {
         }
     }
 
+    printf("Imprimiendo string de 1's y 0's: %s\n", string);
+
     return f;
 }
 
 void showFlight(Flight flight) {
     int i, j;
-    char * str = malloc(sizeof(char)*SEATS);
-    for(i = 0; i < SEATS; i ++) {
-        if(i%2) {
-            str[i] = '0';
-        } else {
-            str[i] = '1';
-        }
-    }
-
-    //flight = flightFromString(str);
 
     printf("        ___\n");
     printf("       /   \\\n");
