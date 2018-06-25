@@ -155,7 +155,7 @@ void displaySecondResponse(char * socketReception) {
         showFlight(modifiedFlight);
         printf("Your operation has been completed successfully\n>");
     } else {
-        printf("%s\n", socketReception);
+        printf("%s\n>", socketReception);
     }
 }
 
