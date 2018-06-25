@@ -166,6 +166,7 @@ int isValidSQL(char * selectStatement) {
         }
         printf("NO DEVOLVIO TUPLA VALIDA \n");
     }
+    printf("NOT VALID SQL \n");
     return 0;
 }
 
@@ -296,16 +297,19 @@ char * cancelFlight(char * action) {
 
     if(flightNumberIsValid(flight_number)) {
         sprintf(sql,"UPDATE flight SET status = 0 WHERE id = %d;",flight_number);
-        if( (error = sqlite3_exec(db,sql,NULL,NULL,NULL)) != SQLITE_OK) {
+        if( (error = sqlite3_exec(db,sql,NULL,NULL,NULL)) == SQLITE_OK) {
+            strcpy(ret,"Flight has been canceled");
+            ret[strlen("Flight has been canceled")] = 0;
+        }
+        else {
             strcpy(ret,"Error deleting flight");
             ret[strlen("Error deleting flight")] = 0;
         }
-        else {
-            strcpy(ret,"Flight has been canceled");
-            ret[strlen("Error deleting flight")] = 0;
-        }
+        
+    }
+    else {
         strcpy(ret,"Invalid flight number");
-        ret[strlen("Error deleting flight")] = 0;
+        ret[strlen("Invalid flight number")] = 0;
     }
 
     return ret;
