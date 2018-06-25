@@ -3,7 +3,7 @@
 
 int serverfd;
 sqlite3 * db;
-int flight_num = 0;
+int flight_num = 1;
 
 int handleSockets() {
 
@@ -162,7 +162,9 @@ int isValidSQL(char * selectStatement) {
     if (error == SQLITE_OK) {
         if(sqlite3_step(res) == SQLITE_ROW) {
             return 1;
+            printf("DEVOLVIO TUPLA VALIDA \n");
         }
+        printf("NO DEVOLVIO TUPLA VALIDA \n");
     }
     return 0;
 }
@@ -368,7 +370,7 @@ int initializeTables() {
                          "seatCol INT NOT NULL," \
                          "status INT DEFAULT 1," \
                          "FOREIGN KEY(flight_id) REFERENCES flight(id),"\
-                         "PRIMARY KEY(client_id, flight_id, seatRow, seatCol, reserv_status) );";
+                         "PRIMARY KEY(client_id, flight_id, seatRow, seatCol, status) );";
 
 
     rc = sqlite3_exec(db, reservTable, callbackStdout, NULL, &cmd_result);
