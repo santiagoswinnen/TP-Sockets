@@ -248,7 +248,7 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
 }
 
 int letterToInt(char c) {
-    switch(c) {
+    switch(toupper(c)) {
         case 'A':return 0;
         case 'B': return 1;
         case 'C': return 2;
