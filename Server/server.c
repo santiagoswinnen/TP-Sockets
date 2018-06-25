@@ -164,21 +164,16 @@ int isValidSQL(char * selectStatement) {
     int error;
     const char * tail;
     error = sqlite3_prepare_v2(db, selectStatement, 1000, &res, &tail);
-    printf("DENTRO DE IS VALID SQL, RESULTADO DE LA CONSULTA FUE: %s \n",error == SQLITE_OK ? "bien" : "mal");
     if (error == SQLITE_OK) {
         if(sqlite3_step(res) == SQLITE_ROW) {
             return 1;
-            printf("DEVOLVIO TUPLA VALIDA \n");
         }
-        printf("NO DEVOLVIO TUPLA VALIDA \n");
     }
-    printf("NOT VALID SQL \n");
     return 0;
 }
 
 int flightNumberIsValid(int number) {
 
-    printf("VALIDANDO FLIGHT NUMBER, SE PASO %d POR PARAMETRO \n",number);
     char sql[100];
     sprintf(sql,"SELECT * FROM flight WHERE id = %d;",number);
     return isValidSQL(sql);
@@ -199,7 +194,6 @@ int flightIsCanceled(int flightNumber) {
     if (error == SQLITE_OK) {
         if(sqlite3_step(res) == SQLITE_ROW) {
             status = sqlite3_column_int(res, 0);
-            printf("STATUS IS %d \n",status);
         }
     }
 
@@ -344,12 +338,9 @@ char * cancelFlight(char * action) {
     }
 
     return ret;
-    /*action viene con la forma "cancel flight [numero]"
-     * eliminarlo de la base de datos y retornar un string que diga
-     * si hubo exito o no*/
+    
 }
 
-/* Prints SQL command output */
 int callbackStdout(void * param, int argc, char ** argv, char ** colName) {
    int i;
    for(i = 0; i < argc; i++) {
@@ -359,8 +350,6 @@ int callbackStdout(void * param, int argc, char ** argv, char ** colName) {
    return 0;
 }
 
-// devuelve solo una tupla. Tiene que pasarse una array de char * con tantos
-// char * como columnas tenga la tabla.
 int callbackOneTouple(void * param, int argc, char ** argv, char ** colName) {
     char ** ret = (char **) param;
     int i;
@@ -413,16 +402,6 @@ int initializeTables() {
     return rc == SQLITE_OK;
 }
 
-int executeOperation(char * opStart, char * tableName, char * opEnd) {
-    int rc;
-    char * cmd_result = NULL;
-    char * cmd = SQLCommandToString(opStart, tableName, opEnd);
-    rc = sqlite3_exec(db, cmd, callbackStdout, NULL, &cmd_result);
-    ERRCHECK(cmd_result);
-    free(cmd);
-    return rc == SQLITE_OK;
-}
-
 char * SQLCommandToString(char * opStart, char * tableName, char * opEnd) {
     int opStartLen = strlen(opStart);
     int nameLen = strlen(tableName);
@@ -434,19 +413,6 @@ char * SQLCommandToString(char * opStart, char * tableName, char * opEnd) {
     cmd[opStartLen+nameLen+opEndLen+1] = ';';
     cmd[opStartLen+nameLen+opEndLen+2] = '\0';
     return cmd;
-}
-
-// touple should have enough mem for n char *s, where n is the number of columns
-int executeOperationRetOneTouple(char * opStart, char * tableName,
-    char * opEnd, char ** touple) {
-
-    int rc;
-    char * cmd_result = NULL;
-    char * cmd = SQLCommandToString(opStart, tableName, opEnd);
-    rc = sqlite3_exec(db, cmd, callbackOneTouple, (void *)touple, &cmd_result);
-    ERRCHECK(cmd_result);
-    free(cmd);
-    return rc == SQLITE_OK;
 }
 
 char * getFlightSeats(int flightId) {
@@ -466,27 +432,6 @@ char * getFlightSeats(int flightId) {
     return seats;
 }
 
-int retreiveReservedFlights(char * flightNum, tableField ** matrix) {
-    sqlite3_stmt * res;
-    int error = 0;
-    int rec_count = 0;
-    const char * tail;
-    error = sqlite3_prepare_v2(db, "SELECT * FROM reservation",
-    1000, &res, &tail);
-    if (error != SQLITE_OK) {
-        printf("An error occurred");
-        return error;
-    }
-    while (sqlite3_step(res) == SQLITE_ROW) {
-        matrix[rec_count][0] = sqlite3_column_int(res, 0);
-        matrix[rec_count][1] = sqlite3_column_int(res, 1);
-        matrix[rec_count][2] = sqlite3_column_int(res, 2);
-        matrix[rec_count][3] = sqlite3_column_int(res, 3);
-        rec_count++;
-    }
-    sqlite3_finalize(res);
-    return error == SQLITE_OK;
-}
 
 int updateFlightSeats(int flightId, int row, int col, int newStatus) {
     int rc;
@@ -503,31 +448,6 @@ int updateFlightSeats(int flightId, int row, int col, int newStatus) {
     return rc;
 }
 
-int updateFlightStatus(int status, int flight_id) {
-    char select_sql[100];
-    char sql[200];
-    sqlite3_stmt * res;
-    int error;
-    char * result;
-    const char * tail;
-    sprintf(select_sql,"SELECT * FROM flight WHERE id = %d;",flight_id);
-    error = sqlite3_prepare_v2(db, select_sql, 1000, &res, &tail);
-    if (error != SQLITE_OK) {
-        printf("Error in database, try again later...\n ");
-        return error;
-    }
-    if(sqlite3_step(res) == SQLITE_ROW) {
-        sprintf(sql,"UPDATE flight SET status = %d WHERE id = %d;",status,flight_id);
-        if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
-            printf("Error updating flight status");
-        }
-    }
-    else {
-        printf("No flight was found");
-    }
-
-    return error;
-}
 
 int insertReservation(int clientid, int flightid, int seatrow, int seatcol, int status) {
 
@@ -567,30 +487,6 @@ int updateReservation(int clientid, int flightid, int seatrow, int seatcol, int 
     sqlite3_finalize(res);
     return error == SQLITE_OK;
 }
-
-int checkFlightStatus(int flightid) {
-    char sql[100];
-    sqlite3_stmt * res;
-    int error = 0;
-    int status;
-    const char * tail;
-    sprintf(sql,"SELECT status FROM flight WHERE id = %d;",flightid);
-    error = sqlite3_prepare_v2(db, sql, 1000, &res, &tail);
-    if (error != SQLITE_OK) {
-        printf("Error in database, try again later...\n ");
-        return error;
-    }
-    if(sqlite3_step(res) == SQLITE_ROW) {
-        status = sqlite3_column_int(res, 1);
-        printf("Flight %d status is: %s \n",flightid,status?"available":"canceled");
-    }
-    else {
-        printf("No flight was found with that flight number");
-    }
-    sqlite3_finalize(res);
-    return error == SQLITE_OK;
-}
-
 
 void fillSeats(char * seats) {
     int i;
