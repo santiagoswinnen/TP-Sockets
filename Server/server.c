@@ -78,6 +78,9 @@ int existingFlightActions(int clientfd, int flightNumber, char * buffer) {
     char seat[BUFFERSIZE] = {0};
     ssize_t bytesRead;
 
+    if(flightIsCanceled(flightNumber)) {
+        return 1;
+    }
     flightData = getFlightData(flightNumber);
     write(clientfd,flightData,BUFFERSIZE);
     if(seatNumberExpected(buffer)) {
@@ -86,6 +89,7 @@ int existingFlightActions(int clientfd, int flightNumber, char * buffer) {
             printf("Error at reading operation\n");
             return -1;
         }
+
         databaseResponseToSeat = checkSeat(cutAction(buffer), seat,flightNumber, clientfd);
         write(clientfd,databaseResponseToSeat,BUFFERSIZE);
         free(databaseResponseToSeat);
@@ -182,6 +186,25 @@ char * getFlightData(int flightNumber) {
     return getFlightSeats(flightNumber);
 }
 
+int flightIsCanceled(int flightNumber) {
+    sqlite3_stmt * res;
+    int error;
+    int status;
+    const char * tail;
+    char sql[100];
+    sprintf(sql,"SELECT status FROM flight WHERE id = %d;",flightNumber);
+    error = sqlite3_prepare_v2(db, sql, 1000, &res, &tail);
+    if (error == SQLITE_OK) {
+        if(sqlite3_step(res) == SQLITE_ROW) {
+            status = sqlite3_column_int(res, 0);
+            printf("STATUS IS %d \n",status);
+        }
+    }
+
+    sqlite3_finalize(res);
+    return status == 0;
+}
+
 char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
     int seatNum;
     int row,col;
@@ -192,38 +215,36 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
     char * num = malloc(sizeof(char) * 2);
     if(flightNumberIsValid(flightNumber)) {
-        seatData = getFlightSeats(flightNumber);
-        ptr = seat + 1;
-        strcpy(num,ptr);
-        row = atoi(num);
-        letter = *seat;
-        col = letterToInt(letter);
-        seatNum = (SEATS_PER_ROW * row) + col;
 
-        if(strcmp(action,"book") == 0) {
-            if(seatData[seatNum] == '1') {
-                strcpy(ret,"The seat you wish to book is already occupied.");
-                ret[strlen("The seat you wish to book is already occupied.")] = 0;
-            }
-            else {
-                sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
-                updateFlightSeats(flightNumber,row,col,'1');
-                if(isValidSQL(sql)) {
-                    updateReservation(clientid,flightNumber,row,col,1);
+            seatData = getFlightSeats(flightNumber);
+            ptr = seat + 1;
+            strcpy(num,ptr);
+            row = atoi(num);
+            row -= 1;
+            letter = *seat;
+            col = letterToInt(letter);
+            seatNum = (SEATS_PER_ROW * row) + col;
+
+            if(strcmp(action,"book") == 0) {
+                if(seatData[seatNum] == '1') {
+                    strcpy(ret,"The seat you wish to book is already occupied.");
+                    ret[strlen("The seat you wish to book is already occupied.")] = 0;
                 }
                 else {
-                    insertReservation(clientid,flightNumber,row,col,1);
+                    sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
+                    updateFlightSeats(flightNumber,row,col,'1');
+                    if(isValidSQL(sql)) {
+                        updateReservation(clientid,flightNumber,row,col,1);
+                    }
+                    else {
+                        insertReservation(clientid,flightNumber,row,col,1);
+                    }
+                    return getFlightSeats(flightNumber);
                 }
                 char * temp = getFlightSeats(flightNumber);
                 strcpy(ret,temp);
                 free(temp);
                 ret[SEATS] = 0;
-            }
-        }
-        else {
-            if(seatData[seatNum] == '0') {
-                strcpy(ret,"The reservation does not exist");
-                ret[strlen("The reservation does not exist")] = 0;
             }
             else {
                 sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
@@ -232,15 +253,21 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
                     updateReservation(clientid,flightNumber,row,col,0);
                 }
                 else {
-                    insertReservation(clientid,flightNumber,row,col,0);
+                    sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
+                    updateFlightSeats(flightNumber,row,col,'0');
+                    if(isValidSQL(sql)) {
+                        updateReservation(clientid,flightNumber,row,col,0);
+                    }
+                    else {
+                        insertReservation(clientid,flightNumber,row,col,0);
+                    }
+                    return getFlightSeats(flightNumber);
                 }
-                strcpy(ret,"Reservation canceled.");
-                ret[strlen("Reservation canceled.")] = 0;
-            }
-        }
+            }   
     }
     else  {
         strcpy(ret,"Invalid flight number");
+        ret[strlen("Invalid flight number")] = 0;
     }
 
     /*el seat pasado como parametro se pasa con formato correcto (e.g. B23)

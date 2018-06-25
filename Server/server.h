@@ -55,3 +55,4 @@ int checkFlightStatus(int flightid);
 int updateReservation(int clientid, int flightid, int seatrow, int seatcol, int status);
 int insertReservation(int clientid, int flightid, int seatrow, int seatcol, int status);
 int insertFlight(int flight_id);
+int flightIsCanceled(int flightNumber);
