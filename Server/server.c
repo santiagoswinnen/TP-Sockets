@@ -230,8 +230,8 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
 
             if(strcmp(action,"book") == 0) {
                 if(seatData[seatNum] == '1') {
-                    strcpy(ret,"The seat you wish to book is already occupied.");
-                    ret[strlen("The seat you wish to book is already occupied.")] = 0;
+                    strcpy(ret,"The seat you wish to book is already occupied\n>");
+                    ret[strlen("The seat you wish to book is already occupied\n>")] = 0;
                 }
                 else {
                     sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
@@ -252,8 +252,8 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
             else {
 
                 if(seatData[seatNum] == '0') {
-                    strcpy(ret,"The seat you selected is not booked.");
-                    ret[strlen("The seat you selected is not booked.")] = 0;
+                    strcpy(ret,"The seat you selected is not booked\n>");
+                    ret[strlen("The seat you selected is not booked\n>")] = 0;
                 }
                 else {
                     sprintf(sql,"SELECT * FROM reservation WHERE flight_id = %d AND client_id = %d AND seatRow = %d AND seatCol = %d;",flightNumber,clientid,row,col);
@@ -276,9 +276,6 @@ char * checkSeat(char * action, char * seat, int flightNumber, int clientid) {
         ret[strlen("Invalid flight number")] = 0;
     }
 
-    /*el seat pasado como parametro se pasa con formato correcto (e.g. B23)
-     * los valores van de la A a la G en mayuscula o minuscula y numero de 1 al 80
-     * las acciones pueden ser "book" o "cancel"*/
     return ret;
 }
 
@@ -305,9 +302,8 @@ char * newFlight() {
     char seats[270];
     char str[100];
     fillSeats(seats);
-    int error;
     sprintf(sql,"INSERT INTO flight (id,status,seats) VALUES (%d,1,'%s');",flight_num,seats);
-    if( (error = sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
+    if( (sqlite3_exec(db,sql,NULL,NULL,&result)) != SQLITE_OK) {
         strcpy(result,"Error creating flight");
     }
     sprintf(str,"New Flight created: flight %d",flight_num++);
@@ -317,7 +313,7 @@ char * newFlight() {
 }
 
 char * cancelFlight(char * action) {
-    int error;
+
     int flight_number;
     char * ret = malloc(sizeof(char)*BUFFERSIZE);
     char sql[100];
@@ -332,7 +328,7 @@ char * cancelFlight(char * action) {
 
     if(flightNumberIsValid(flight_number)) {
         sprintf(sql,"UPDATE flight SET status = 0 WHERE id = %d;",flight_number);
-        if( (error = sqlite3_exec(db,sql,NULL,NULL,NULL)) == SQLITE_OK) {
+        if( (sqlite3_exec(db,sql,NULL,NULL,NULL)) == SQLITE_OK) {
             strcpy(ret,"Flight has been canceled");
             ret[strlen("Flight has been canceled")] = 0;
         }
