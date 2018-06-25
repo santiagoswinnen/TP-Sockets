@@ -27,7 +27,7 @@ void checkForNewClients();
 void attendClient(const int * clientfd);
 int existingFlightActions(int clientfd, int flightNumber, char * buffer);
 int checkFlightNumber(char * buffer);
-char * checkSeat(char * action, char * seat);
+char * checkSeat(char * action, char * seat, int flightNumber, int clientid);
 int seatNumberExpected(char * action);
 char * cutAction(char * action);
 void clearBuffer(char * buffer);
